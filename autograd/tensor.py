@@ -57,10 +57,30 @@ def tensor_sum(t: Tensor) -> Tensor:
     requires_grad =t.requries_grad
     if requires_grad == True:
         def grad_fn(grad:np.ndarray) ->np.ndarray:
-            return grad*np.ones_like(t.data)
-        
+            return grad*np.ones_like(t.data)       
         depends_on=[Dependency(t, grad_fn)]
     else:
         depends_on=[]
     return Tensor(sum_data, requires_grad, depends_on)
 
+def add(t1:Tensor, t2:Tensor) ->Tensor:
+    data=t1.data+t2.data
+    requires_grad=t1.requries_grad or t2.requries_grad
+    depends_on:List[Dependency]=[]
+    if t1.requries_grad==True:
+        def grad_fn1(grad:np.ndarray) -> np.ndarray:
+            ndims_added=grad.ndim - t1.data.ndim
+            for _ in range(ndims_added):
+                grad=grad.sum(axis=0)
+            return grad
+        depends_on.append(Dependency(t1, grad_fn1))
+    
+    if t2.requries_grad==True:
+        def grad_fn2(grad: np.ndarray) -> np.ndarray:
+            ndims_added=grad.ndim - t2.data.ndim
+            for _ in range(ndims_added):
+                grad=grad.sum(axis=0)
+            return grad
+        depends_on.append(Dependency(t2, grad_fn2))
+        
+    return Tensor(data, requires_grad, depends_on)
