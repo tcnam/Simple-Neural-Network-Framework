@@ -1,5 +1,5 @@
 from neuralnet.layers import Layer
-from typing import Sequence
+from typing import Sequence, Iterator, Tuple
 import numpy as np
 
 class NeuralNet:
@@ -15,3 +15,9 @@ class NeuralNet:
         for layer in reversed(self.layers):
             grad=layer.backward(grad=grad)
         return grad
+    
+    def params_and_grads(self) ->Iterator[Tuple[np.ndarray, np.ndarray]]:
+        for layer in self.layers:
+            for name, param in layer.params.items():
+                grad=layer.grads[name]
+                yield param, grad

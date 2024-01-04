@@ -1,4 +1,3 @@
-from neuralnet.tensor import Tensor
 import numpy as np
 from typing import Dict, Callable
 
@@ -28,7 +27,7 @@ class Linear(Layer):
         self.grads['w']=self.inputs.T @ grad
         return grad @ self.params['w'].T
 
-F=Callable([np.ndarray], np.ndarray)
+F=Callable[[np.ndarray], np.ndarray]
 
 class Activation(Layer):
     def __init__(self, f:F, f_prime:F) -> None:
@@ -43,12 +42,35 @@ class Activation(Layer):
     def backward(self, grad: np.ndarray) -> np.ndarray:
         return self.f_prime(self.inputs)*grad
 
-def tanh(x:np.ndarray) -> Tensor:
+def tanh(x:np.ndarray) -> np.ndarray:
     return np.tanh(x)
 
-def tanh_prime(x:np.ndarray) -> Tensor:
+def tanh_prime(x:np.ndarray) -> np.ndarray:
     return 1- tanh(x)**2
+
+def relu(x:np.ndarray) ->np.ndarray:
+    return np.maximum(x, 0)
+
+def relu_prime(x:np.ndarray)->np.ndarray:
+    return x>0
+
+def softmax(x:np.ndarray) ->np.ndarray:
+    return np.exp(x)/np.sum(np.exp(x))
+
+def softmax_prime(x:np.ndarray) ->np.ndarray:
+    n=np.size(x)
+    tmp=np.tile(x, n)
+    return tmp*(np.identity(n)-np.transpose(tmp))
+
 
 class Tanh(Activation):
     def __init__(self) -> None:
         super().__init__(tanh, tanh_prime)
+
+class Relu(Activation):
+    def __init__(self) -> None:
+        super().__init__(relu, relu_prime)
+        
+class Softmax(Activation):
+    def __init__(self) -> None:
+        super().__init__(softmax, softmax_prime)
